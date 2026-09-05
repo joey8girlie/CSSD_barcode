@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="th"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0b6bcb">
+<title>CSSD | บันทึกการใช้เครื่องมือ</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:-apple-system,"Segoe UI",sans-serif;background:#f2f4f7;color:#111}
+header{background:#0b6bcb;color:#fff;padding:13px 15px;display:flex;align-items:center;gap:10px;
+ position:sticky;top:0;z-index:5}
+header .t{flex:1;font-size:17px;font-weight:600}
+header button{background:#ffffff22;color:#fff;border:0;border-radius:9px;padding:8px 11px;font-size:14px}
+.card{background:#fff;margin:12px;padding:14px;border-radius:14px;box-shadow:0 1px 4px #0001}
+label{display:block;font-size:13px;color:#555;margin:10px 0 4px}
+input,select{width:100%;padding:13px;font-size:16px;border:1px solid #ccd6e4;border-radius:10px;background:#fff}
+button{border:0;border-radius:12px;font-size:16px;font-weight:600;padding:14px;width:100%}
+.primary{background:#0b6bcb;color:#fff}.ghost{background:#e8eef7;color:#0b6bcb}
+.danger{background:#fde8e8;color:#c00}.ok{background:#0a8f4d;color:#fff}
+.row{display:flex;gap:8px;align-items:center}
+ul{list-style:none;padding:0;margin:0 12px}
+li{background:#fff;border-radius:12px;padding:11px 13px;margin-bottom:8px;
+ box-shadow:0 1px 3px #0001;display:flex;align-items:center;gap:10px}
+.nm{flex:1;font-size:15px;line-height:1.35}.c{font-size:11px;color:#888}
+.qty{background:#eef3fa;color:#0b6bcb;border-radius:9px;padding:5px 11px;font-weight:700;font-size:15px}
+.dot{width:9px;height:9px;border-radius:50%;background:#0a8f4d;flex:0 0 auto}
+.sec{margin:16px 14px 6px;font-size:13px;color:#666;font-weight:600}
+#bar{position:sticky;bottom:0;padding:10px 12px;background:#f2f4f7ee;backdrop-filter:blur(6px);display:flex;gap:8px}
+.page{display:none;padding-bottom:12px}.page.on{display:block}
+#cam{position:fixed;inset:0;background:#000;z-index:20;display:none;flex-direction:column}
+video{width:100%;flex:1;object-fit:cover}
+#frame{position:absolute;top:27%;left:8%;width:84%;height:24%;border:3px solid #0f0;
+ border-radius:12px;box-shadow:0 0 0 100vmax #0007}
+#cnt{position:absolute;top:14px;left:0;right:0;text-align:center;color:#fff;font-size:15px;
+ font-weight:600;text-shadow:0 1px 5px #000}
+#log{position:absolute;bottom:92px;left:12px;right:12px;color:#fff;font-size:13px;
+ max-height:120px;overflow:hidden;text-shadow:0 1px 4px #000}
+#camBtn{position:absolute;bottom:14px;left:12px;right:12px;display:flex;gap:8px}
+.sheet{position:fixed;inset:0;background:#0008;z-index:30;display:none;align-items:flex-end}
+.sheet>div{background:#fff;width:100%;border-radius:20px 20px 0 0;padding:18px}
+#toast{position:fixed;left:50%;bottom:78px;transform:translateX(-50%);background:#111d;color:#fff;
+ padding:10px 18px;border-radius:22px;font-size:14px;z-index:40;display:none;max-width:88%}
+#q{position:fixed;top:52px;right:10px;background:#f59e0b;color:#fff;font-size:12px;
+ padding:4px 10px;border-radius:12px;z-index:6;display:none}
+.empty{text-align:center;color:#999;font-size:14px;padding:34px 20px}
+</style></head><body>
+
+<header>
+  <div class="t" id="hdr">CSSD</div>
+  <button id="backBtn" onclick="go('home')" style="display:none">← กลับ</button>
+  <button id="outBtn" onclick="logout()" style="display:none">ออก</button>
+</header>
+<div id="q">📤 รอส่ง <span id="qn">0</span></div>
+
+<!-- ══ LOGIN ══ -->
+<div class="page on" id="p-login">
+  <div class="card" style="margin-top:36px">
+    <div style="font-size:20px;font-weight:700;margin-bottom:4px">เข้าสู่ระบบ</div>
+    <div class="c">บันทึกการใช้เครื่องมือแพทย์</div>
+    <label>ชื่อผู้ใช้</label><input id="lu" autocapitalize="off" autocomplete="username">
+    <label>PIN 6 หลัก</label>
+    <input id="lp" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password">
+    <div style="height:16px"></div>
+    <button class="primary" onclick="doLogin()">เข้าสู่ระบบ</button>
+  </div>
+</div>
+
+<!-- ══ HOME ══ -->
+<div class="page" id="p-home">
+  <div class="card row">
+    <select id="fdept" onchange="loadOpen()" style="flex:1">
+      <option>ทั้งหมด</option><option>ห้องผ่าตัด</option><option>ห้องคลอด</option>
+      <option>OPD</option><option>Ward</option><option>อื่นๆ</option>
+    </select>
+    <button class="ghost" style="width:auto;padding:13px 16px" onclick="loadOpen()">↻</button>
+  </div>
+  <div class="sec" id="openHead">เคสที่เปิดอยู่</div>
+  <ul id="openList"></ul>
+  <div id="bar"><button class="primary" onclick="go('new')">+ เปิดเคสใหม่</button></div>
+</div>
+
+<!-- ══ NEW CASE ══ -->
+<div class="page" id="p-new">
+  <div class="card">
+    <label>HN ผู้ป่วย *</label>
+    <input id="nhn" inputmode="numeric" placeholder="เช่น 6512345">
+    <div class="c" style="margin-top:5px">⚠️ กรอกเฉพาะ HN ไม่ต้องใส่ชื่อผู้ป่วย</div>
+    <label>วันที่ใช้</label><input id="ndt" type="date">
+    <label>หน่วยงาน</label>
+    <select id="ndept"><option>ห้องผ่าตัด</option><option>ห้องคลอด</option>
+      <option>OPD</option><option>Ward</option><option>อื่นๆ</option></select>
+    <label>หมายเหตุ</label><input id="nnote" placeholder="ไม่บังคับ">
+    <div style="height:16px"></div>
+    <button class="primary" onclick="createCase()">เปิดเคส</button>
+  </div>
+</div>
+
+<!-- ══ CASE ══ -->
+<div class="page" id="p-case">
+  <div class="card">
+    <div class="row"><div class="dot"></div>
+      <div style="flex:1"><b id="cHn" style="font-size:17px"></b>
+        <div class="c" id="cMeta"></div></div></div>
+  </div>
+  <div class="sec" id="cSec">รายการ</div>
+  <ul id="cList"></ul>
+  <div id="bar">
+    <button class="ghost" style="flex:0 0 30%" onclick="shareCase()">📤</button>
+    <button class="primary" onclick="openCam()">📷 สแกน</button>
+    <button class="ok" style="flex:0 0 26%" onclick="closeCase()">✅</button>
+  </div>
+</div>
+
+<!-- ══ CAMERA ══ -->
+<div id="cam">
+  <video id="v" playsinline muted></video>
+  <div id="frame"></div><div id="cnt">พร้อมสแกน</div><div id="log"></div>
+  <div id="camBtn">
+    <button class="ghost" style="flex:0 0 20%" onclick="torch()">🔦</button>
+    <button class="ghost" style="flex:0 0 20%" onclick="manual()">⌨️</button>
+    <button class="primary" onclick="closeCam()">✓ เสร็จ</button>
+  </div>
+</div>
+
+<!-- ══ ITEM ใหม่ ══ -->
+<div class="sheet" id="sh-new"><div>
+  <div style="font-size:17px;font-weight:700">ยังไม่รู้จักบาร์โค้ดนี้</div>
+  <div class="c" id="nCode" style="margin:6px 0 2px;font-size:14px"></div>
+  <label>ชื่อรายการ *</label><input id="iName" placeholder="เช่น Set ผ่าตัดเล็ก">
+  <label>กลุ่ม</label>
+  <select id="iCat"><option>ชุดเครื่องมือ</option><option>เครื่องมือเดี่ยว</option>
+    <option>ผ้า/ซอง</option><option>อื่นๆ</option></select>
+  <label>หน่วย</label>
+  <select id="iUnit"><option>ชุด</option><option>ชิ้น</option><option>ห่อ</option></select>
+  <div class="row" style="margin-top:16px">
+    <button class="danger" style="flex:0 0 32%" onclick="skipNew()">ข้าม</button>
+    <button class="primary" onclick="saveNewItem()">บันทึก</button></div>
+</div></div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { BrowserMultiFormatReader } from
+  'https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/+esm';
+
+/* ═════ CONFIG — แก้ 2 บรรทัดนี้ ═════ */
+const API     = 'https://script.google.com/macros/s/XXXXXXXX/exec';
+const APP_KEY = 'เปลี่ยนเป็นรหัสยาวๆสุ่มเอง_เช่น_k7Fq2mXpZ9tR4vNb';
+
+/* ═════ STATE ═════ */
+const LS = { get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},
+             set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)) };
+let ME    = LS.get('me', null);
+let ITEMS = LS.get('items', {});          // cache master → สแกนตอบทันที
+let QUEUE = LS.get('queue', []);          // คิว offline
+let CASE  = null, LINES = [];
+let stream=null, track=null, zx=null, paused=false, last='', lastT=0, pending=null, torchOn=false;
+let poll = null;
+const DEV = (()=>{ let d=LS.get('dev',null); if(!d){d='dev-'+Math.random().toString(36).slice(2,8);LS.set('dev',d);} return d; })();
+const $ = id => document.getElementById(id);
+
+/* ═════ API — ต้องใช้ text/plain เลี่ยง CORS preflight ═════ */
+async function api(action, body={}) {
+  const r = await fetch(API, { method:'POST', redirect:'follow',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action, key:APP_KEY, user: ME?.username, device: DEV, ...body }) });
+  const j = await r.json();
+  if (j.ok === false && j.error === 'unauthorized') throw new Error('APP_KEY ไม่ตรงกับฝั่ง Apps Script');
+  return j;
+}
+const toast = (m,ms=2000)=>{ const t=$('toast'); t.textContent=m; t.style.display='block';
+  clearTimeout(t._t); t._t=setTimeout(()=>t.style.display='none',ms); };
+
+/* ═════ NAV ═════ */
+window.go = p => {
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));
+  $('p-'+p).classList.add('on');
+  $('backBtn').style.display = (p==='new'||p==='case') ? 'block' : 'none';
+  $('outBtn').style.display  = (p!=='login') ? 'block' : 'none';
+  $('hdr').textContent = {login:'CSSD',home:'เคสที่เปิดอยู่',new:'เปิดเคสใหม่',case:'รายละเอียดเคส'}[p];
+  clearInterval(poll);
+  if (p==='home') { loadOpen(); poll=setInterval(loadOpen,8000); }
+  if (p==='case') { poll=setInterval(()=>refreshCase(true),5000); }
+};
+
+/* ═════ AUTH ═════ */
+window.doLogin = async () => {
+  const u=$('lu').value.trim(), p=$('lp').value.trim();
+  if(!u||!p) return toast('กรอกชื่อผู้ใช้และ PIN');
+  toast('กำลังเข้าสู่ระบบ...');
+  try {
+    const r = await api('login', { username:u, pin:p });
+    if (!r.ok) return toast(r.error);
+    ME = r.user; LS.set('me', ME);
+    $('ndept').value = ME.department || 'ห้องผ่าตัด';
+    $('fdept').value = ME.department || 'ทั้งหมด';
+    await syncItems(); go('home');
+  } catch(e) { toast('เชื่อมต่อไม่ได้: '+e.message, 4000); }
+};
+window.logout = () => { if(confirm('ออกจากระบบ?')){ localStorage.removeItem('me'); ME=null; location.reload(); } };
+
+async function syncItems() {
+  try { const r = await api('bootstrap');
+    if (r.ok) { ITEMS = r.items; LS.set('items', ITEMS); } } catch(e){}
+}
+
+/* ═════ HOME ═════ */
+window.loadOpen = async () => {
+  try {
+    const r = await api('listOpen', { department: $('fdept').value });
+    if (!r.ok) return;
+    $('openHead').textContent = `เคสที่เปิดอยู่ (${r.cases.length})`;
+    $('openList').innerHTML = r.cases.length ? r.cases.map(c=>`
+      <li onclick="enter('${c.case_id}')"><div class="dot"></div>
+        <div class="nm"><b>HN ${c.hn}</b>
+          <div class="c">${c.department} · ${c.case_no}</div>
+          <div class="c">👤 ${c.opened_by} · ${c.opened_at} น.</div></div>
+        <div class="qty">${c.total}</div></li>`).join('')
+      : '<div class="empty">ยังไม่มีเคสที่เปิดอยู่<br>กด "เปิดเคสใหม่" ด้านล่าง</div>';
+  } catch(e) { toast('โหลดไม่ได้ — ตรวจสอบอินเทอร์เน็ต'); }
+};
+
+/* ═════ NEW CASE ═════ */
+$('ndt').value = new Date().toLocaleDateString('sv-SE');
+window.createCase = async () => {
+  const hn = $('nhn').value.trim();
+  if (!hn) return toast('กรุณากรอก HN');
+  const r = await api('openCase', { hn, use_date:$('ndt').value,
+                                    department:$('ndept').value, note:$('nnote').value });
+  if (!r.ok) return toast(r.error);
+  if (r.existing) toast(`HN นี้มีเคสเปิดอยู่แล้วโดย ${r.opened_by} — เข้าร่วมเคสเดิม`, 3000);
+  $('nhn').value=''; $('nnote').value='';
+  enter(r.case_id);
+};
+
+/* ═════ CASE ═════ */
+window.enter = async id => { CASE = { case_id:id }; go('case'); await refreshCase(); };
+
+async function refreshCase(silent) {
+  if (!CASE) return;
+  try {
+    const r = await api('getCase', { case_id: CASE.case_id });
+    if (!r.ok) return;
+    CASE = r.header; LINES = r.lines; renderCase();
+  } catch(e) { if(!silent) toast('โหลดไม่ได้'); }
+}
+
+function renderCase() {
+  $('cHn').textContent = 'HN ' + CASE.hn;
+  $('cMeta').textContent = `${CASE.case_no} · ${CASE.department} · ${CASE.use_date}`;
+  const g = {};
+  LINES.forEach(l => { g[l.barcode] = g[l.barcode] || { name:l.name, qty:0, by:[], rows:[] };
+    g[l.barcode].qty += l.qty; g[l.barcode].rows.push(l);
+    const tag = `${l.by} ${l.at}`;
+    if (g[l.barcode].by.indexOf(tag)<0) g[l.barcode].by.push(tag); });
+  const ks = Object.keys(g);
+  const tot = ks.reduce((s,k)=>s+g[k].qty,0);
+  $('cSec').textContent = `รายการ (${ks.length} ชนิด · รวม ${tot})`;
+  $('cList').innerHTML = ks.length ? ks.map(k=>`
+    <li><div class="nm">${g[k].name}
+      <div class="c">${k}</div>
+      <div class="c">👤 ${g[k].by.join(' · ')}</div></div>
+      <div class="qty">${g[k].qty}</div>
+      <button class="danger" style="width:auto;padding:8px 11px;font-size:13px"
+        onclick="voidLine('${g[k].rows[g[k].rows.length-1].row_id}')">ลบ</button></li>`).join('')
+    : '<div class="empty">ยังไม่มีรายการ<br>กด "สแกน" เพื่อเริ่ม</div>';
+}
+
+window.voidLine = async id => {
+  const why = prompt('เหตุผลที่ลบ', 'ยิงผิด'); if (why===null) return;
+  const r = await api('voidItem', { row_id:id, reason:why });
+  if (r.ok) { toast('ลบแล้ว'); refreshCase(); }
+};
+
+window.closeCase = async () => {
+  if (QUEUE.length) return toast('ยังส่งข้อมูลไม่ครบ รอสักครู่');
+  if (!confirm('ปิดเคสนี้? หลังปิดจะเพิ่มรายการไม่ได้')) return;
+  const r = await api('closeCase', { case_id: CASE.case_id });
+  if (!r.ok) return toast(r.error);
+  toast('ปิดเคสแล้ว');
+  if (r.share) doShare(r.share);
+  go('home');
+};
+
+window.shareCase = async () => {
+  const r = await api('share', { case_id: CASE.case_id });
+  if (r.ok) doShare(r.url);
+};
+function doShare(url) {
+  const txt = `สรุปการใช้เครื่องมือ HN ${CASE.hn}\n${url}`;
+  if (navigator.share) navigator.share({ title:'สรุปการใช้เครื่องมือ', text:txt }).catch(()=>{});
+  else { navigator.clipboard.writeText(url); toast('คัดลอกลิงก์แล้ว วางในแชทได้เลย', 3000); }
+}
+
+/* ═════ CAMERA ═════ */
+window.openCam = async () => {
+  if (CASE.status !== 'open') return toast('เคสนี้ปิดแล้ว');
+  $('cam').style.display='flex';
+  const v = $('v');
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720} } });
+  } catch(e) { alert('เปิดกล้องไม่ได้ — ต้องเปิดผ่าน HTTPS และกดอนุญาตกล้อง'); return closeCam(); }
+  v.srcObject = stream; await v.play(); track = stream.getVideoTracks()[0];
+  try { await track.applyConstraints({ advanced:[{ focusMode:'continuous' }] }); } catch(e){}
+
+  if ('BarcodeDetector' in window) {
+    const d = new BarcodeDetector({ formats:['code_128','code_39','qr_code','data_matrix','ean_13','itf'] });
+    (async function loop(){ if(!stream) return;
+      if(!paused){ try{ const c=await d.detect(v); if(c.length) onScan(c[0].rawValue);}catch(e){} }
+      requestAnimationFrame(loop); })();
+  } else {
+    zx = new BrowserMultiFormatReader();
+    zx.decodeFromVideoElement(v, r => { if (r && !paused) onScan(r.getText()); });
+  }
+};
+window.closeCam = () => {
+  paused=false; torchOn=false; zx?.reset?.(); zx=null;
+  stream?.getTracks().forEach(t=>t.stop()); stream=null; track=null;
+  $('cam').style.display='none'; $('log').innerHTML=''; refreshCase();
+};
+window.torch = async () => {
+  try { torchOn=!torchOn; await track.applyConstraints({ advanced:[{ torch:torchOn }] }); }
+  catch(e){ toast('รุ่นนี้ไม่รองรับไฟฉาย'); }
+};
+window.manual = () => { const c = prompt('พิมพ์รหัสบาร์โค้ด'); if (c) onScan(c); };
+
+function beep(ok){ navigator.vibrate?.(ok?70:[90,60,90]);
+  try{ const a=new(window.AudioContext||webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();
+    o.connect(g);g.connect(a.destination);o.frequency.value=ok?1250:420;g.gain.value=.18;
+    o.start();o.stop(a.currentTime+(ok?.1:.28)); }catch(e){} }
+const logLine = t => { $('log').innerHTML = `<div>${t}</div>` + $('log').innerHTML; };
+
+/* ═════ SCAN — optimistic + queue ═════ */
+function onScan(raw) {
+  const code = String(raw).trim().toUpperCase(), t = Date.now();
+  if (!code || (code===last && t-lastT<2000)) return;
+  last=code; lastT=t;
+
+  if (ITEMS[code]) {                       // ★ รู้จักอยู่แล้ว → ขึ้นทันที ไม่รอเน็ต
+    beep(true);
+    LINES.push({ row_id:'tmp', barcode:code, name:ITEMS[code].name, qty:1,
+                 by:ME.full_name, at:new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}) });
+    renderCase();
+    enqueue({ case_id:CASE.case_id, barcode:code, qty:1,
+              client_uuid:uuid(), scanned_at:new Date().toISOString(), user:ME.username });
+    logLine('✓ ' + ITEMS[code].name);
+    $('cnt').textContent = `ยิงแล้ว ${LINES.length} รายการ`;
+  } else { beep(false); askNew(code); }
+}
+const uuid = () => (crypto.randomUUID?.() ||
+  't'+Date.now()+Math.random().toString(36).slice(2,10));
+
+function askNew(code){ paused=true; pending=code;
+  $('nCode').textContent='รหัส: '+code; $('iName').value='';
+  $('sh-new').style.display='flex'; setTimeout(()=>$('iName').focus(),250); }
+window.skipNew = () => { last=''; closeSheet(); };
+function closeSheet(){ $('sh-new').style.display='none'; paused=false; pending=null; }
+
+window.saveNewItem = async () => {
+  const n = $('iName').value.trim(); if(!n) return toast('กรุณากรอกชื่อ');
+  const code = pending, unit = $('iUnit').value;
+  ITEMS[code] = { name:n, category:$('iCat').value, unit, verified:false };
+  LS.set('items', ITEMS); closeSheet();
+  const r = await api('addItem', { barcode:code, name:n, category:$('iCat').value, unit });
+  if (!r.ok) return toast('บันทึกไม่สำเร็จ: '+r.error);
+  logLine('➕ ' + n); toast('เพิ่มเข้าฐานกลางแล้ว — คนอื่นยิงได้เลย', 2500);
+  onScan(code);
+};
+
+/* ═════ QUEUE — กันเน็ตหลุด ═════ */
+function enqueue(s){ QUEUE.push(s); LS.set('queue',QUEUE); showQ(); flush(); }
+function showQ(){ $('q').style.display = QUEUE.length?'block':'none'; $('qn').textContent = QUEUE.length; }
+let flushing=false;
+async function flush(){
+  if (flushing || !QUEUE.length || !navigator.onLine) return;
+  flushing=true;
+  const batch = QUEUE.slice(0,25);
+  try {
+    const r = await api('syncBatch', { scans: batch });
+    if (r.ok) { QUEUE = QUEUE.slice(batch.length); LS.set('queue',QUEUE); showQ();
+                if (!QUEUE.length && CASE) refreshCase(true); }
+  } catch(e){}
+  flushing=false;
+  if (QUEUE.length) setTimeout(flush, 3000);
+}
+setInterval(flush, 5000);
+window.addEventListener('online', flush);
+
+/* ═════ START ═════ */
+showQ();
+if (ME) { $('ndept').value = ME.department||'ห้องผ่าตัด';
+          $('fdept').value = ME.department||'ทั้งหมด'; syncItems(); go('home'); }
+setInterval(syncItems, 5*60*1000);
+</script></body></html>
